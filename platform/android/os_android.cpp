@@ -299,6 +299,18 @@ void OS_Android::vibrate_handheld(int p_duration_ms) {
 	godot_java->vibrate(p_duration_ms);
 }
 
+String OS_Android::get_data_path() const {
+	return "/sdcard/godot";
+}
+
+String OS_Android::get_config_path() const {
+	return "/sdcard/godot";
+}
+
+String OS_Android::get_cache_path() const {
+	return get_data_path();
+}
+
 bool OS_Android::_check_internal_feature_support(const String &p_feature) {
 	if (p_feature == "mobile") {
 		return true;

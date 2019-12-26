@@ -122,6 +122,8 @@ private:
 
 	String rendering_driver;
 
+	Context context;
+
 	bool keep_screen_on;
 
 #if defined(VULKAN_ENABLED)
@@ -219,6 +221,8 @@ public:
 	void process_scroll(int tool_type, Point2 start, Point2 end, Vector2 scroll_delta);
 	void process_joy_event(JoypadEvent p_event);
 	void process_key_event(int p_keycode, int p_scancode, int p_unicode_char, bool p_pressed);
+
+	void set_context(Context p_context);
 
 	static DisplayServer *create_func(const String &p_rendering_driver, WindowMode p_mode, uint32_t p_flags, const Vector2i &p_resolution, Error &r_error);
 	static Vector<String> get_rendering_drivers_func();

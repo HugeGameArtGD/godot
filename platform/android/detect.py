@@ -166,6 +166,8 @@ def configure(env):
         env.Append(CCFLAGS=["-O0", "-g", "-fno-limit-debug-info"])
         env.Append(CPPDEFINES=["_DEBUG", "DEBUG_ENABLED", "DEBUG_MEMORY_ENABLED"])
         env.Append(CPPFLAGS=["-UNDEBUG"])
+    if env['tools']:
+        env.Append(CPPDEFINES=['USE_JAVA_FILE_ACCESS'])
 
     # Compiler configuration
 

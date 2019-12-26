@@ -28,6 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
+#include <drivers/unix/file_access_unix.h>
+#include <core/os/dir_access.h>
+#include <drivers/unix/dir_access_unix.h>
 #include "display_server_android.h"
 
 #include "android_keys_utils.h"
@@ -35,6 +38,8 @@
 #include "java_godot_io_wrapper.h"
 #include "java_godot_wrapper.h"
 #include "os_android.h"
+#include "file_access_android.h"
+#include "dir_access_jandroid.h"
 
 #if defined(OPENGL_ENABLED)
 #include "drivers/gles2/rasterizer_gles2.h"
@@ -800,4 +805,16 @@ void DisplayServerAndroid::process_magnetometer(const Vector3 &p_magnetometer) {
 
 void DisplayServerAndroid::process_gyroscope(const Vector3 &p_gyroscope) {
 	InputFilter::get_singleton()->set_gyroscope(p_gyroscope);
+}
+
+void DisplayServerAndroid::set_context(Context p_context) {
+	this->context = p_context;
+	if (this->context == CONTEXT_PROJECTMAN || this->context == CONTEXT_EDITOR) {
+		FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_RESOURCES);
+		DirAccess::make_default<DirAccessUnix>(DirAccess::ACCESS_RESOURCES);
+	} else {
+
+		FileAccess::make_default<FileAccessAndroid>(FileAccess::ACCESS_RESOURCES);
+		DirAccess::make_default<DirAccessJAndroid>(DirAccess::ACCESS_RESOURCES);
+	}
 }

@@ -368,3 +368,5 @@ ruby.png
 snow.png
 updown.png
 gcov.css
+
+platform/android/java/lib/.cxx/ndk_locator_record.json

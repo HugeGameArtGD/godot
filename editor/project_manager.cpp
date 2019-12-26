@@ -54,6 +54,10 @@
 #include "scene/main/window.h"
 #include "servers/display_server.h"
 
+#include "editor/editor_node.h"
+#include "scene/main/scene_tree.h"
+#include "scene/main/viewport.h"
+
 static inline String get_project_key_from_path(const String &dir) {
 	return dir.replace("/", "::");
 }
@@ -2059,34 +2063,45 @@ void ProjectManager::_open_selected_projects() {
 		String path = EditorSettings::get_singleton()->get("projects/" + selected);
 		String conf = path.plus_file("project.godot");
 
-		if (!FileAccess::exists(conf)) {
-			dialog_error->set_text(vformat(TTR("Can't open project at '%s'."), path));
-			dialog_error->popup_centered();
-			return;
-		}
+		EditorNode *editor_node = NULL;
+		editor_node = memnew(EditorNode);
+		String local_game_path;
+		ProjectSettings::get_singleton()->setup(path, "", false);
+		OS::get_singleton()->set_cwd(path);
+		local_game_path = GLOBAL_DEF("application/run/main_scene", "");
+		DisplayServer::get_singleton()->set_context(DisplayServer::CONTEXT_EDITOR);
+		editor_node->load_scene(local_game_path);
+		get_tree()->_change_scene(editor_node);
+		return;
 
-		print_line("Editing project: " + path + " (" + selected + ")");
+		/* if (!FileAccess::exists(conf)) { */
+		/* 	dialog_error->set_text(vformat(TTR("Can't open project at '%s'."), path)); */
+		/* 	dialog_error->popup_centered_minsize(); */
+		/* 	return; */
+		/* } */
 
-		List<String> args;
+		/* print_line("Editing project: " + path + " (" + selected + ")"); */
 
-		args.push_back("--path");
-		args.push_back(path);
+		/* List<String> args; */
 
-		args.push_back("--editor");
+		/* args.push_back("--path"); */
+		/* args.push_back(path); */
 
-		if (OS::get_singleton()->is_disable_crash_handler()) {
-			args.push_back("--disable-crash-handler");
-		}
+		/* args.push_back("--editor"); */
 
-		String exec = OS::get_singleton()->get_executable_path();
+		/* if (OS::get_singleton()->is_disable_crash_handler()) { */
+		/* 	args.push_back("--disable-crash-handler"); */
+		/* } */
 
-		OS::ProcessID pid = 0;
-		Error err = OS::get_singleton()->execute(exec, args, false, &pid);
-		ERR_FAIL_COND(err);
+		/* String exec = OS::get_singleton()->get_executable_path(); */
+
+		/* OS::ProcessID pid = 0; */
+		/* Error err = OS::get_singleton()->execute(exec, args, false, &pid); */
+		/* ERR_FAIL_COND(err); */
 	}
 
-	_dim_window();
-	get_tree()->quit();
+	/* _dim_window(); */
+	/* get_tree()->quit(); */
 }
 
 void ProjectManager::_open_selected_projects_ask() {
@@ -2687,7 +2702,7 @@ ProjectManager::ProjectManager() {
 	ask_update_settings->get_ok()->connect("pressed", callable_mp(this, &ProjectManager::_confirm_update_settings));
 	gui_base->add_child(ask_update_settings);
 
-	OS::get_singleton()->set_low_processor_usage_mode(true);
+	OS::get_singleton()->set_low_processor_usage_mode(false);
 
 	npdialog = memnew(ProjectDialog);
 	gui_base->add_child(npdialog);
