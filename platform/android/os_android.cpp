@@ -487,7 +487,7 @@ void OS_Android::process_mouse_pressed(int p_button, Point2 p_pos, bool pressed)
 	ev->set_position(p_pos);
 	ev->set_global_position(p_pos);
 	ev->set_pressed(pressed);
-	switch(p_button) {
+	switch (p_button) {
 		case 1: //left button
 			ev->set_button_index(BUTTON_LEFT);
 			break;
@@ -514,7 +514,7 @@ void OS_Android::process_mouse_moved_pressed(int p_button, Point2 p_pos) {
 	ev->set_position(p_pos);
 	ev->set_global_position(p_pos);
 	ev->set_relative(p_pos - hover_prev_pos);
-	switch(p_button) {
+	switch (p_button) {
 		case 1: //left button
 			ev->set_button_mask(BUTTON_MASK_LEFT);
 			break;
@@ -535,7 +535,7 @@ void OS_Android::process_double_tap(Point2 p_pos, int p_button) {
 	ev->set_position(p_pos);
 	ev->set_global_position(p_pos);
 	ev->set_pressed(p_button != 0);
-	switch(p_button) {
+	switch (p_button) {
 		case 1: //left button
 			ev->set_button_index(BUTTON_LEFT);
 			break;

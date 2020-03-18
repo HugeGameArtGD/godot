@@ -162,7 +162,7 @@ public class GodotInputHandler implements InputDeviceListener {
 	}
 
 	public boolean onTouchEvent(final MotionEvent event) {
-		if ((event.isFromSource(InputDevice.SOURCE_MOUSE)) || event.getAction() != MotionEvent.ACTION_MOVE) {
+		if (!event.isFromSource(InputDevice.SOURCE_MOUSE) || event.getAction() != MotionEvent.ACTION_MOVE) {
 			return false;
 		}
 		final int x = Math.round(event.getX());
