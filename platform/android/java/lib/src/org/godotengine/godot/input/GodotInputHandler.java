@@ -187,7 +187,7 @@ public class GodotInputHandler implements InputDeviceListener {
 			queueEvent(new Runnable() {
 				@Override
 				public void run() {
-					GodotLib.mouseMovedPressed(MotionEvent.BUTTON_PRIMARY, x, y);
+					GodotLib.mouseMovedPressed(MotionEvent.BUTTON_SECONDARY, x, y);
 				}
 			});
 		}
@@ -195,7 +195,7 @@ public class GodotInputHandler implements InputDeviceListener {
 			queueEvent(new Runnable() {
 				@Override
 				public void run() {
-					GodotLib.mouseMovedPressed(MotionEvent.BUTTON_PRIMARY, x, y);
+					GodotLib.mouseMovedPressed(MotionEvent.BUTTON_TERTIARY, x, y);
 				}
 			});
 		}
