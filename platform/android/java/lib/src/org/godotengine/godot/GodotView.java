@@ -97,8 +97,7 @@ public class GodotView extends GLSurfaceView {
 		this.detector.onTouchEvent(event);
 		if (!event.isFromSource(InputDevice.SOURCE_MOUSE)) {
 			return activity.gotTouchEvent(event);
-		}
-		else {
+		} else {
 			return inputHandler.handleMouseDragEvent(event);
 		}
 	}
