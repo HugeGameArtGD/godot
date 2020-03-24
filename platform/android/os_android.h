@@ -185,8 +185,8 @@ public:
 	void process_touch(int p_what, int p_pointer, const Vector<TouchPos> &p_points);
 	void process_hover(int p_type, Point2 p_pos);
 	void process_mouse_pressed(int p_type, Point2 p_pos, bool pressed);
-	void process_mouse_moved_pressed(int p_button, Point2 p_pos);
-	void process_double_tap(Point2 p_pos, int p_button);
+	void process_mouse_moved_pressed(int p_button_mask, Point2 p_pos);
+	void process_double_tap(int p_button_mask, Point2 p_pos);
 	void process_scroll(Point2 p_pos);
 	void process_joy_event(JoypadEvent p_event);
 	void process_event(Ref<InputEvent> p_event);
