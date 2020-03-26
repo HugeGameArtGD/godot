@@ -146,6 +146,8 @@ Error OS_Android::initialize(const VideoMode &p_desired, int p_video_driver, int
 
 	video_driver_index = p_video_driver;
 
+	buttons_state = 0;
+
 	rendering_server = memnew(RenderingServerRaster);
 	if (get_render_thread_mode() != RENDER_THREAD_UNSAFE) {
 		rendering_server = memnew(RenderingServerWrapMT(rendering_server, false));
@@ -480,53 +482,67 @@ void OS_Android::process_hover(int p_type, Point2 p_pos) {
 	}
 }
 
-void OS_Android::process_mouse_pressed(int p_button, Point2 p_pos, bool pressed) {
+void OS_Android::process_mouse_event(int p_action, int p_button_mask, Point2 p_pos) {
 	// https://developer.android.com/reference/android/view/MotionEvent.html#ACTION_HOVER_ENTER
-	Ref<InputEventMouseButton> ev;
-	ev.instance();
-	ev->set_position(p_pos);
-	ev->set_global_position(p_pos);
-	ev->set_pressed(pressed);
-	switch (p_button) {
-		case 1: //left button
-			ev->set_button_index(BUTTON_LEFT);
-			break;
-		case 2: //right button
-			ev->set_button_index(BUTTON_RIGHT);
-			break;
-		case 4: //middle button
-			ev->set_button_index(BUTTON_MIDDLE); //pc middle mouse button
-			break;
-		case 5: // wheel down
-			ev->set_button_index(BUTTON_WHEEL_DOWN);
-			ev->set_factor(1);
-			break;
-		case 6: // wheel up
-			ev->set_button_index(BUTTON_WHEEL_UP);
-			ev->set_factor(1);
-			break;
-		case 7: // wheel right
-			ev->set_button_index(BUTTON_WHEEL_RIGHT);
-			ev->set_factor(1);
-			break;
-		case 8: // wheel left
-			ev->set_button_index(BUTTON_WHEEL_LEFT);
-			ev->set_factor(1);
-			break;
-	}
-	input->parse_input_event(ev);
-}
+	switch (p_action) {
+		case ACTION_BUTTON_PRESS:
+		case ACTION_BUTTON_RELEASE: {
+			Ref<InputEventMouseButton> ev;
+			ev.instance();
+			ev->set_position(p_pos);
+			ev->set_global_position(p_pos);
+			ev->set_pressed(p_action == ACTION_BUTTON_PRESS);
+			int button_mask;
+			if (p_button_mask < 8) {
+				button_mask = buttons_state ^ p_button_mask;
+			} else {
+				button_mask = p_button_mask;
+			}
 
-void OS_Android::process_mouse_moved_pressed(int p_button_mask, Point2 p_pos) {
-	// https://developer.android.com/reference/android/view/MotionEvent.html#ACTION_HOVER_ENTER
-	Ref<InputEventMouseMotion> ev;
-	ev.instance();
-	ev->set_position(p_pos);
-	ev->set_global_position(p_pos);
-	ev->set_relative(p_pos - hover_prev_pos);
-	ev->set_button_mask(p_button_mask);
-	input->parse_input_event(ev);
-	hover_prev_pos = p_pos;
+			if (ev->is_pressed()) {
+				buttons_state |= button_mask;
+			} else {
+				buttons_state &= ~button_mask;
+			}
+
+			switch (button_mask) {
+				case BUTTON_MASK_LEFT:
+					ev->set_button_index(BUTTON_LEFT);
+					break;
+				case BUTTON_MASK_RIGHT:
+					ev->set_button_index(BUTTON_RIGHT);
+					break;
+				case BUTTON_MASK_MIDDLE:
+					ev->set_button_index(BUTTON_MIDDLE);
+					break;
+				case ANDROID_MOUSE_WHEEL_UP:
+					ev->set_button_index(BUTTON_WHEEL_UP);
+					break;
+				case ANDROID_MOUSE_WHEEL_DOWN:
+					ev->set_button_index(BUTTON_WHEEL_DOWN);
+					break;
+				case ANDROID_MOUSE_WHEEL_RIGHT:
+					ev->set_button_index(BUTTON_WHEEL_RIGHT);
+					break;
+				case ANDROID_MOUSE_WHEEL_LEFT:
+					ev->set_button_index(BUTTON_WHEEL_LEFT);
+					break;
+			}
+			ev->set_button_mask(buttons_state);
+			input->parse_input_event(ev);
+		} break;
+
+		case ACTION_MOVE: {
+			Ref<InputEventMouseMotion> ev;
+			ev.instance();
+			ev->set_position(p_pos);
+			ev->set_global_position(p_pos);
+			ev->set_relative(p_pos - hover_prev_pos);
+			ev->set_button_mask(p_button_mask);
+			input->parse_input_event(ev);
+			hover_prev_pos = p_pos;
+		} break;
+	}
 }
 
 void OS_Android::process_double_tap(int p_button_mask, Point2 p_pos) {
