@@ -64,7 +64,6 @@ import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.view.Display;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
