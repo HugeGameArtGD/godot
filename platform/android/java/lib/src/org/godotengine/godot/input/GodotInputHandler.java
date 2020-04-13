@@ -248,7 +248,7 @@ public class GodotInputHandler implements InputDeviceListener {
 		}
 
 		if (cnt == 0) return false;
-		godotView.queueEvent(new Runnable() {
+		queueEvent(new Runnable() {
 			// This method will be called on the rendering thread:
 			public void run() {
 				for (char c : cc) {
