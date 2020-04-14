@@ -37,6 +37,7 @@ import org.godotengine.godot.vulkan.VkSurfaceView;
 
 import android.annotation.SuppressLint;
 import android.view.GestureDetector;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -94,22 +95,26 @@ public class GodotVulkanRenderView extends VkSurfaceView implements GodotRenderV
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);
 		mGestureDetector.onTouchEvent(event);
-		return mActivity.gotTouchEvent(event);
+		if (!event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+			return mActivity.gotTouchEvent(event);
+		} else {
+			return mInputHandler.handleMouseDragEvent(event);
+		}
 	}
 
 	@Override
 	public boolean onKeyUp(final int keyCode, KeyEvent event) {
-		return mInputHandler.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
+		return mInputHandler.onKeyUp(keyCode, event);
 	}
 
 	@Override
 	public boolean onKeyDown(final int keyCode, KeyEvent event) {
-		return mInputHandler.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
+		return mInputHandler.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
-		return mInputHandler.onGenericMotionEvent(event) || super.onGenericMotionEvent(event);
+		return mInputHandler.onGenericMotionEvent(event);
 	}
 
 	@Override

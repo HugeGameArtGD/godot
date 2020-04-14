@@ -63,6 +63,15 @@ public:
 private:
 	String rendering_driver;
 
+	static const int ANDROID_MOUSE_WHEEL_UP = 1 << (BUTTON_WHEEL_UP - 1);
+	static const int ANDROID_MOUSE_WHEEL_DOWN = 1 << (BUTTON_WHEEL_DOWN - 1);
+	static const int ANDROID_MOUSE_WHEEL_RIGHT = 1 << (BUTTON_WHEEL_RIGHT - 1);
+	static const int ANDROID_MOUSE_WHEEL_LEFT = 1 << (BUTTON_WHEEL_LEFT - 1);
+	static const int ACTION_BUTTON_PRESS = 11;
+	static const int ACTION_BUTTON_RELEASE = 12;
+	static const int ACTION_MOVE = 2;
+	int buttons_state;
+
 	bool keep_screen_on;
 
 	Vector<TouchPos> touch;
@@ -83,6 +92,8 @@ private:
 	void _window_callback(const Callable &p_callable, const Variant &p_arg) const;
 
 	static void _dispatch_input_events(const Ref<InputEvent> &p_event);
+
+	int button_index_from_mask(int button_mask) const;
 
 public:
 	static DisplayServerAndroid *get_singleton();
@@ -157,7 +168,8 @@ public:
 	void process_gyroscope(const Vector3 &p_gyroscope);
 	void process_touch(int p_what, int p_pointer, const Vector<TouchPos> &p_points);
 	void process_hover(int p_type, Point2 p_pos);
-	void process_double_tap(Point2 p_pos);
+    void process_mouse_event(int p_action, int p_button_mask, Point2 p_pos);
+	void process_double_tap(int p_button_mask, Point2 p_pos);
 	void process_scroll(Point2 p_pos);
 	void process_joy_event(JoypadEvent p_event);
 	void process_key_event(int p_keycode, int p_scancode, int p_unicode_char, bool p_pressed);
@@ -165,6 +177,9 @@ public:
 	static DisplayServer *create_func(const String &p_rendering_driver, WindowMode p_mode, uint32_t p_flags, const Vector2i &p_resolution, Error &r_error);
 	static Vector<String> get_rendering_drivers_func();
 	static void register_android_driver();
+
+	virtual Point2i mouse_get_position() const;
+	virtual int mouse_get_button_state() const;
 
 	DisplayServerAndroid(const String &p_rendering_driver, WindowMode p_mode, uint32_t p_flags, const Vector2i &p_resolution, Error &r_error);
 	~DisplayServerAndroid();

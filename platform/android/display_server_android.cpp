@@ -58,7 +58,7 @@ bool DisplayServerAndroid::has_feature(Feature p_feature) const {
 		//case FEATURE_HIDPI:
 		//case FEATURE_ICON:
 		//case FEATURE_IME:
-		//case FEATURE_MOUSE:
+		case FEATURE_MOUSE:
 		//case FEATURE_MOUSE_WARP:
 		//case FEATURE_NATIVE_DIALOG:
 		//case FEATURE_NATIVE_ICON:
@@ -375,6 +375,8 @@ DisplayServerAndroid::DisplayServerAndroid(const String &p_rendering_driver, Dis
 
 	keep_screen_on = GLOBAL_GET("display/window/energy_saving/keep_screen_on");
 
+	buttons_state = 0;
+
 #if defined(OPENGL_ENABLED)
 	if (rendering_driver == "opengl") {
 		bool gl_initialization_error = false;
@@ -613,14 +615,80 @@ void DisplayServerAndroid::process_hover(int p_type, Point2 p_pos) {
 	}
 }
 
-void DisplayServerAndroid::process_double_tap(Point2 p_pos) {
+void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, Point2 p_pos) {
+	switch (p_action) {
+		case ACTION_BUTTON_PRESS:
+		case ACTION_BUTTON_RELEASE: {
+			Ref<InputEventMouseButton> ev;
+			ev.instance();
+			ev->set_position(p_pos);
+			ev->set_global_position(p_pos);
+			ev->set_pressed(p_action == ACTION_BUTTON_PRESS);
+			int button_mask;
+			if (p_button_mask < 8) {
+				button_mask = buttons_state ^ p_button_mask;
+			} else {
+				button_mask = p_button_mask;
+			}
+
+			if (ev->is_pressed()) {
+				buttons_state |= button_mask;
+			} else {
+				buttons_state &= ~button_mask;
+			}
+
+			ev->set_button_index(button_index_from_mask(button_mask));
+			ev->set_button_mask(buttons_state);
+			Input::get_singleton()->parse_input_event(ev);
+		} break;
+
+		case ACTION_MOVE: {
+			Ref<InputEventMouseMotion> ev;
+			ev.instance();
+			ev->set_position(p_pos);
+			ev->set_global_position(p_pos);
+			ev->set_relative(p_pos - hover_prev_pos);
+			ev->set_button_mask(p_button_mask);
+			Input::get_singleton()->parse_input_event(ev);
+            hover_prev_pos = p_pos;
+		} break;
+	}
+}
+
+void DisplayServerAndroid::process_double_tap(int p_button_mask, Point2 p_pos) {
 	Ref<InputEventMouseButton> ev;
 	ev.instance();
 	ev->set_position(p_pos);
 	ev->set_global_position(p_pos);
-	ev->set_pressed(false);
+	ev->set_pressed(p_button_mask != 0);
+	ev->set_button_index(button_index_from_mask(p_button_mask));
 	ev->set_doubleclick(true);
 	Input::get_singleton()->parse_input_event(ev);
+}
+
+int DisplayServerAndroid::button_index_from_mask(int button_mask) const {
+	switch (button_mask) {
+		case BUTTON_MASK_LEFT:
+			return BUTTON_LEFT;
+		case BUTTON_MASK_RIGHT:
+			return BUTTON_RIGHT;
+		case BUTTON_MASK_MIDDLE:
+			return BUTTON_MIDDLE;
+		case ANDROID_MOUSE_WHEEL_UP:
+			return BUTTON_WHEEL_UP;
+		case ANDROID_MOUSE_WHEEL_DOWN:
+			return BUTTON_WHEEL_DOWN;
+		case ANDROID_MOUSE_WHEEL_RIGHT:
+			return BUTTON_WHEEL_RIGHT;
+		case ANDROID_MOUSE_WHEEL_LEFT:
+			return BUTTON_WHEEL_LEFT;
+		case BUTTON_MASK_XBUTTON1:
+			return BUTTON_XBUTTON1;
+		case BUTTON_MASK_XBUTTON2:
+			return BUTTON_XBUTTON2;
+		default:
+			return 0;
+	}
 }
 
 void DisplayServerAndroid::process_scroll(Point2 p_pos) {
@@ -646,4 +714,12 @@ void DisplayServerAndroid::process_magnetometer(const Vector3 &p_magnetometer) {
 
 void DisplayServerAndroid::process_gyroscope(const Vector3 &p_gyroscope) {
 	Input::get_singleton()->set_gyroscope(p_gyroscope);
+}
+
+Point2i DisplayServerAndroid::mouse_get_position() const {
+	return hover_prev_pos;
+}
+
+int DisplayServerAndroid::mouse_get_button_state() const {
+	return buttons_state;
 }
