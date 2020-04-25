@@ -95,11 +95,8 @@ public class GodotVulkanRenderView extends VkSurfaceView implements GodotRenderV
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);
 		mGestureDetector.onTouchEvent(event);
-		if (!event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-			return mActivity.gotTouchEvent(event);
-		} else {
-			return mInputHandler.handleMouseDragEvent(event);
-		}
+
+		return mInputHandler.onTouchEvent(event);
 	}
 
 	@Override

@@ -161,17 +161,72 @@ public class GodotInputHandler implements InputDeviceListener {
 		return true;
 	}
 
-	/**
-	 * Handles mouse drag event
-	 * Mouse drag (mouse pressed and move) doesn't fire onGeneticMotionEvent so this is needed
-	 * */
-	public boolean handleMouseDragEvent(final MotionEvent event) {
-		if (event.getAction() != MotionEvent.ACTION_MOVE) {
-			// we return true because every time a mouse event is fired, the event is already handled
-			// in onGenericMotionEvent, so by touch event we can say that the event is also handled
-			return true;
+	public boolean onTouchEvent(final MotionEvent event) {
+		// Mouse drag (mouse pressed and move) doesn't fire onGeneticMotionEvent so this is needed
+		if(event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+			if (event.getAction() != MotionEvent.ACTION_MOVE) {
+				// we return true because every time a mouse event is fired, the event is already handled
+				// in onGenericMotionEvent, so by touch event we can say that the event is also handled
+				return true;
+			}
+			return handleMouseEvent(event);
 		}
-		return handleMouseEvent(event);
+
+		final int evcount = event.getPointerCount();
+		if (evcount == 0)
+			return true;
+
+		if (mRenderView != null) {
+			final int[] arr = new int[event.getPointerCount() * 3];
+
+			for (int i = 0; i < event.getPointerCount(); i++) {
+
+				arr[i * 3 + 0] = (int)event.getPointerId(i);
+				arr[i * 3 + 1] = (int)event.getX(i);
+				arr[i * 3 + 2] = (int)event.getY(i);
+			}
+			final int pointer_idx = event.getPointerId(event.getActionIndex());
+
+			//System.out.printf("gaction: %d\n",event.getAction());
+			final int action = event.getAction() & MotionEvent.ACTION_MASK;
+			mRenderView.queueOnRenderThread(new Runnable() {
+				@Override
+				public void run() {
+					switch (action) {
+						case MotionEvent.ACTION_DOWN: {
+							GodotLib.touch(0, 0, evcount, arr);
+							//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
+						} break;
+						case MotionEvent.ACTION_MOVE: {
+							GodotLib.touch(1, 0, evcount, arr);
+							/*
+							for(int i=0;i<event.getPointerCount();i++) {
+								System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
+							}
+							*/
+						} break;
+						case MotionEvent.ACTION_POINTER_UP: {
+							GodotLib.touch(4, pointer_idx, evcount, arr);
+							//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+						} break;
+						case MotionEvent.ACTION_POINTER_DOWN: {
+							GodotLib.touch(3, pointer_idx, evcount, arr);
+							//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+						} break;
+						case MotionEvent.ACTION_CANCEL:
+						case MotionEvent.ACTION_UP: {
+							GodotLib.touch(2, 0, evcount, arr);
+							/*
+							for(int i=0;i<event.getPointerCount();i++) {
+								System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
+							}
+							*/
+						} break;
+					}
+				}
+			});
+		}
+		return true;
 	}
 
 	public boolean onGenericMotionEvent(MotionEvent event) {
@@ -389,7 +444,7 @@ public class GodotInputHandler implements InputDeviceListener {
 		return -1;
 	}
 
-	private boolean handleMouseEvent(MotionEvent event) {
+	private boolean handleMouseEvent(final MotionEvent event) {
 		if (event.getActionMasked() == MotionEvent.ACTION_HOVER_ENTER ||
 				event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE ||
 				event.getActionMasked() == MotionEvent.ACTION_HOVER_EXIT) {
@@ -411,7 +466,7 @@ public class GodotInputHandler implements InputDeviceListener {
 			queueEvent(new Runnable() {
 				@Override
 				public void run() {
-					GodotLib.mouseEvent(action, buttonMask, x, y);
+					GodotLib.mouseEvent(action, buttonMask, x, y, 1);
 				}
 			});
 			return true;
@@ -423,16 +478,16 @@ public class GodotInputHandler implements InputDeviceListener {
 				queueEvent(new Runnable() {
 					@Override
 					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_UP, x, y);
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_UP, x, y);
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_UP, x, y, event.getAxisValue(MotionEvent.AXIS_VSCROLL));
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_UP, x, y, event.getAxisValue(MotionEvent.AXIS_VSCROLL));
 					}
 				});
 			} else if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0.0f) {
 				queueEvent(new Runnable() {
 					@Override
 					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_DOWN, x, y);
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_DOWN, x, y);
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_DOWN, x, y, -event.getAxisValue(MotionEvent.AXIS_VSCROLL));
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_DOWN, x, y, -event.getAxisValue(MotionEvent.AXIS_VSCROLL));
 					}
 				});
 			}
@@ -440,16 +495,16 @@ public class GodotInputHandler implements InputDeviceListener {
 				queueEvent(new Runnable() {
 					@Override
 					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_RIGHT, x, y);
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_RIGHT, x, y);
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_RIGHT, x, y, event.getAxisValue(MotionEvent.AXIS_HSCROLL));
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_RIGHT, x, y, event.getAxisValue(MotionEvent.AXIS_HSCROLL));
 					}
 				});
 			} else if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) < 0.0f) {
 				queueEvent(new Runnable() {
 					@Override
 					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_LEFT, x, y);
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_LEFT, x, y);
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_LEFT, x, y, -event.getAxisValue(MotionEvent.AXIS_HSCROLL));
+						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_LEFT, x, y, -event.getAxisValue(MotionEvent.AXIS_HSCROLL));
 					}
 				});
 			}
@@ -462,7 +517,7 @@ public class GodotInputHandler implements InputDeviceListener {
 			queueEvent(new Runnable() {
 				@Override
 				public void run() {
-					GodotLib.mouseEvent(action, buttonMask, x, y);
+					GodotLib.mouseEvent(action, buttonMask, x, y, 1);
 				}
 			});
 			return true;

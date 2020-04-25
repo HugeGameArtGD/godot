@@ -615,7 +615,7 @@ void DisplayServerAndroid::process_hover(int p_type, Point2 p_pos) {
 	}
 }
 
-void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, Point2 p_pos) {
+void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, Point2 p_pos, float factor) {
 	switch (p_action) {
 		case ACTION_BUTTON_PRESS:
 		case ACTION_BUTTON_RELEASE: {
@@ -624,6 +624,7 @@ void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, 
 			ev->set_position(p_pos);
 			ev->set_global_position(p_pos);
 			ev->set_pressed(p_action == ACTION_BUTTON_PRESS);
+			ev->set_factor(factor);
 			int button_mask;
 			if (p_button_mask < 8) {
 				button_mask = buttons_state ^ p_button_mask;

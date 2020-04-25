@@ -120,11 +120,8 @@ public class GodotGLRenderView extends GLSurfaceView implements GodotRenderView 
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);
 		this.detector.onTouchEvent(event);
-		if (!event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-			return activity.gotTouchEvent(event);
-		} else {
-			return inputHandler.handleMouseDragEvent(event);
-		}
+
+		return inputHandler.onTouchEvent(event);
 	}
 
 	@Override
