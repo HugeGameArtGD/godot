@@ -226,29 +226,30 @@ JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env, jcl
 	}
 }
 
-JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_touch(JNIEnv *env, jclass clazz, jint ev, jint pointer, jint count, jintArray positions) {
+JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_touch(JNIEnv *env, jclass clazz, jint input_device, jint ev, jint pointer, jint pointer_count, jfloatArray positions, jint buttons_mask, jfloat factor) {
 	if (step == 0)
 		return;
 
 	Vector<DisplayServerAndroid::TouchPos> points;
-	for (int i = 0; i < count; i++) {
-		jint p[3];
-		env->GetIntArrayRegion(positions, i * 3, 3, p);
+	for (int i = 0; i < pointer_count; i++) {
+		jfloat p[3];
+		env->GetFloatArrayRegion(positions, i * 3, 3, p);
 		DisplayServerAndroid::TouchPos tp;
 		tp.pos = Point2(p[1], p[2]);
-		tp.id = p[0];
+		tp.id = (int)p[0];
 		points.push_back(tp);
 	}
 
-	DisplayServerAndroid::get_singleton()->process_touch(ev, pointer, points);
-
-	/*
-	if (os_android)
-		os_android->process_touch(ev,pointer,points);
-	*/
+	// https://developer.android.com/reference/android/view/InputDevice#SOURCE_MOUSE
+	static const int SOURCE_MOUSE = 8194;
+	if ((input_device & SOURCE_MOUSE) == SOURCE_MOUSE) {
+		DisplayServerAndroid::get_singleton()->process_mouse_event(ev, buttons_mask, points[0].pos, factor);
+	} else {
+		DisplayServerAndroid::get_singleton()->process_touch(ev, pointer, points);
+	}
 }
 
-JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_hover(JNIEnv *env, jclass clazz, jint p_type, jint p_x, jint p_y) {
+JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_hover(JNIEnv *env, jclass clazz, jint p_type, jfloat p_x, jfloat p_y) {
 	if (step == 0)
 		return;
 

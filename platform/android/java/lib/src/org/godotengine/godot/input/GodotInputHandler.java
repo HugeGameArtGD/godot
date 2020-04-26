@@ -163,7 +163,7 @@ public class GodotInputHandler implements InputDeviceListener {
 
 	public boolean onTouchEvent(final MotionEvent event) {
 		// Mouse drag (mouse pressed and move) doesn't fire onGeneticMotionEvent so this is needed
-		if(event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+		if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
 			if (event.getAction() != MotionEvent.ACTION_MOVE) {
 				// we return true because every time a mouse event is fired, the event is already handled
 				// in onGenericMotionEvent, so by touch event we can say that the event is also handled
@@ -177,13 +177,13 @@ public class GodotInputHandler implements InputDeviceListener {
 			return true;
 
 		if (mRenderView != null) {
-			final int[] arr = new int[event.getPointerCount() * 3];
+			final float[] arr = new float[event.getPointerCount() * 3];
 
 			for (int i = 0; i < event.getPointerCount(); i++) {
 
-				arr[i * 3 + 0] = (int)event.getPointerId(i);
-				arr[i * 3 + 1] = (int)event.getX(i);
-				arr[i * 3 + 2] = (int)event.getY(i);
+				arr[i * 3 + 0] = event.getPointerId(i);
+				arr[i * 3 + 1] = event.getX(i);
+				arr[i * 3 + 2] = event.getY(i);
 			}
 			final int pointer_idx = event.getPointerId(event.getActionIndex());
 
@@ -193,34 +193,15 @@ public class GodotInputHandler implements InputDeviceListener {
 				@Override
 				public void run() {
 					switch (action) {
-						case MotionEvent.ACTION_DOWN: {
-							GodotLib.touch(0, 0, evcount, arr);
-							//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
-						} break;
-						case MotionEvent.ACTION_MOVE: {
-							GodotLib.touch(1, 0, evcount, arr);
-							/*
-							for(int i=0;i<event.getPointerCount();i++) {
-								System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
-							}
-							*/
-						} break;
-						case MotionEvent.ACTION_POINTER_UP: {
-							GodotLib.touch(4, pointer_idx, evcount, arr);
-							//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-						} break;
-						case MotionEvent.ACTION_POINTER_DOWN: {
-							GodotLib.touch(3, pointer_idx, evcount, arr);
-							//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-						} break;
+						case MotionEvent.ACTION_DOWN:
 						case MotionEvent.ACTION_CANCEL:
-						case MotionEvent.ACTION_UP: {
-							GodotLib.touch(2, 0, evcount, arr);
-							/*
-							for(int i=0;i<event.getPointerCount();i++) {
-								System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
-							}
-							*/
+						case MotionEvent.ACTION_UP:
+						case MotionEvent.ACTION_MOVE: {
+							GodotLib.touch(event.getSource(), action, 0, evcount, arr, 0, 1);
+						} break;
+						case MotionEvent.ACTION_POINTER_UP:
+						case MotionEvent.ACTION_POINTER_DOWN: {
+							GodotLib.touch(event.getSource(), action, pointer_idx, evcount, arr, 0, 1);
 						} break;
 					}
 				}
@@ -262,8 +243,8 @@ public class GodotInputHandler implements InputDeviceListener {
 				return true;
 			}
 		} else if ((event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS) {
-			final int x = Math.round(event.getX());
-			final int y = Math.round(event.getY());
+			final float x = event.getX();
+			final float y = event.getY();
 			final int type = event.getAction();
 			queueEvent(new Runnable() {
 				@Override
@@ -445,83 +426,65 @@ public class GodotInputHandler implements InputDeviceListener {
 	}
 
 	private boolean handleMouseEvent(final MotionEvent event) {
-		if (event.getActionMasked() == MotionEvent.ACTION_HOVER_ENTER ||
-				event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE ||
-				event.getActionMasked() == MotionEvent.ACTION_HOVER_EXIT) {
-			final int x = Math.round(event.getX());
-			final int y = Math.round(event.getY());
-			final int type = event.getAction();
-			queueEvent(new Runnable() {
-				@Override
-				public void run() {
-					GodotLib.hover(type, x, y);
-				}
-			});
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_BUTTON_PRESS || event.getAction() == MotionEvent.ACTION_BUTTON_RELEASE) {
-			final float x = event.getX();
-			final float y = event.getY();
-			final int buttonMask = InputUtils.fixButtonsStateMask(event.getButtonState());
-			final int action = event.getAction();
-			queueEvent(new Runnable() {
-				@Override
-				public void run() {
-					GodotLib.mouseEvent(action, buttonMask, x, y, 1);
-				}
-			});
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_SCROLL) {
-			final float x = event.getX();
-			final float y = event.getY();
+		switch (event.getActionMasked()) {
+			case MotionEvent.ACTION_HOVER_ENTER:
+			case MotionEvent.ACTION_HOVER_MOVE:
+			case MotionEvent.ACTION_HOVER_EXIT: {
+				final float x = event.getX();
+				final float y = event.getY();
+				final int type = event.getAction();
+				queueEvent(new Runnable() {
+					@Override
+					public void run() {
+						GodotLib.hover(type, x, y);
+					}
+				});
+				return true;
+			}
+			case MotionEvent.ACTION_BUTTON_PRESS:
+			case MotionEvent.ACTION_BUTTON_RELEASE:
+			case MotionEvent.ACTION_MOVE: {
+				final float x = event.getX();
+				final float y = event.getY();
+				final int buttonsMask = InputUtils.fixButtonsStateMask(event.getButtonState());
+				final int action = event.getAction();
+				queueEvent(new Runnable() {
+					@Override
+					public void run() {
+						GodotLib.touch(event.getSource(), action, 0, 1, new float[] { 0, x, y }, buttonsMask, 1);
+					}
+				});
+				return true;
+			}
+			case MotionEvent.ACTION_SCROLL: {
+				final float[] positionArray = new float[] { 0, event.getX(), event.getY() };
+				final int buttonsMaskFixed = InputUtils.fixButtonsStateMask(event.getButtonState());
 
-			if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) > 0.0f) {
-				queueEvent(new Runnable() {
-					@Override
-					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_UP, x, y, event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_UP, x, y, event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-					}
-				});
-			} else if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0.0f) {
-				queueEvent(new Runnable() {
-					@Override
-					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_DOWN, x, y, -event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_DOWN, x, y, -event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-					}
-				});
-			}
-			if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) > 0.0f) {
-				queueEvent(new Runnable() {
-					@Override
-					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_RIGHT, x, y, event.getAxisValue(MotionEvent.AXIS_HSCROLL));
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_RIGHT, x, y, event.getAxisValue(MotionEvent.AXIS_HSCROLL));
-					}
-				});
-			} else if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) < 0.0f) {
-				queueEvent(new Runnable() {
-					@Override
-					public void run() {
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_PRESS, MOUSE_WHEEL_LEFT, x, y, -event.getAxisValue(MotionEvent.AXIS_HSCROLL));
-						GodotLib.mouseEvent(MotionEvent.ACTION_BUTTON_RELEASE, MOUSE_WHEEL_LEFT, x, y, -event.getAxisValue(MotionEvent.AXIS_HSCROLL));
-					}
-				});
-			}
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			final float x = event.getX();
-			final float y = event.getY();
-			final int buttonMask = InputUtils.fixButtonsStateMask(event.getButtonState());
-			final int action = event.getAction();
-			queueEvent(new Runnable() {
-				@Override
-				public void run() {
-					GodotLib.mouseEvent(action, buttonMask, x, y, 1);
+				if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) > 0.0f) {
+					handleMouseScrollWheelButtonEvent(event.getSource(), buttonsMaskFixed, MOUSE_WHEEL_UP, event.getAxisValue(MotionEvent.AXIS_VSCROLL), positionArray);
+				} else if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0.0f) {
+					handleMouseScrollWheelButtonEvent(event.getSource(), buttonsMaskFixed, MOUSE_WHEEL_DOWN, -event.getAxisValue(MotionEvent.AXIS_VSCROLL), positionArray);
 				}
-			});
-			return true;
+				if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) > 0.0f) {
+					handleMouseScrollWheelButtonEvent(event.getSource(), buttonsMaskFixed, MOUSE_WHEEL_RIGHT, event.getAxisValue(MotionEvent.AXIS_HSCROLL), positionArray);
+				} else if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) < 0.0f) {
+					handleMouseScrollWheelButtonEvent(event.getSource(), buttonsMaskFixed, MOUSE_WHEEL_LEFT, -event.getAxisValue(MotionEvent.AXIS_HSCROLL), positionArray);
+				}
+				return true;
+			}
 		}
 		return false;
+	}
+
+	private void handleMouseScrollWheelButtonEvent(final int source, final int buttonsMaskFixed, final int scrollButton, final float factor, final float[] positionArray) {
+		queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				int fixedButtonsMaskWithScrollButton = buttonsMaskFixed | scrollButton;
+
+				GodotLib.touch(source, MotionEvent.ACTION_BUTTON_PRESS, 0, 1, positionArray, fixedButtonsMaskWithScrollButton, factor);
+				GodotLib.touch(source, MotionEvent.ACTION_BUTTON_RELEASE, 0, 1, positionArray, buttonsMaskFixed, factor);
+			}
+		});
 	}
 }

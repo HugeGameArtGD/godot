@@ -489,9 +489,9 @@ void DisplayServerAndroid::process_key_event(int p_keycode, int p_scancode, int 
 	Input::get_singleton()->parse_input_event(ev);
 }
 
-void DisplayServerAndroid::process_touch(int p_what, int p_pointer, const Vector<DisplayServerAndroid::TouchPos> &p_points) {
-	switch (p_what) {
-		case 0: { //gesture begin
+void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vector<DisplayServerAndroid::TouchPos> &p_points) {
+	switch (p_event) {
+		case ACTION_DOWN: { //gesture begin
 			if (touch.size()) {
 				//end all if exist
 				for (int i = 0; i < touch.size(); i++) {
@@ -521,7 +521,7 @@ void DisplayServerAndroid::process_touch(int p_what, int p_pointer, const Vector
 			}
 
 		} break;
-		case 1: { //motion
+		case ACTION_MOVE: { //motion
 			ERR_FAIL_COND(touch.size() != p_points.size());
 
 			for (int i = 0; i < touch.size(); i++) {
@@ -548,7 +548,8 @@ void DisplayServerAndroid::process_touch(int p_what, int p_pointer, const Vector
 			}
 
 		} break;
-		case 2: { //release
+		case ACTION_CANCEL:
+		case ACTION_UP: { //release
 			if (touch.size()) {
 				//end all if exist
 				for (int i = 0; i < touch.size(); i++) {
@@ -562,7 +563,7 @@ void DisplayServerAndroid::process_touch(int p_what, int p_pointer, const Vector
 				touch.clear();
 			}
 		} break;
-		case 3: { // add touch
+		case ACTION_POINTER_DOWN: { // add touch
 			for (int i = 0; i < p_points.size(); i++) {
 				if (p_points[i].id == p_pointer) {
 					TouchPos tp = p_points[i];
@@ -580,7 +581,7 @@ void DisplayServerAndroid::process_touch(int p_what, int p_pointer, const Vector
 				}
 			}
 		} break;
-		case 4: { // remove touch
+		case ACTION_POINTER_UP: { // remove touch
 			for (int i = 0; i < touch.size(); i++) {
 				if (touch[i].id == p_pointer) {
 					Ref<InputEventScreenTouch> ev;
@@ -625,18 +626,9 @@ void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, 
 			ev->set_global_position(p_pos);
 			ev->set_pressed(p_action == ACTION_BUTTON_PRESS);
 			ev->set_factor(factor);
-			int button_mask;
-			if (p_button_mask < 8) {
-				button_mask = buttons_state ^ p_button_mask;
-			} else {
-				button_mask = p_button_mask;
-			}
+			int button_mask = buttons_state ^ p_button_mask;
 
-			if (ev->is_pressed()) {
-				buttons_state |= button_mask;
-			} else {
-				buttons_state &= ~button_mask;
-			}
+			buttons_state = p_button_mask;
 
 			ev->set_button_index(button_index_from_mask(button_mask));
 			ev->set_button_mask(buttons_state);
@@ -651,7 +643,7 @@ void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, 
 			ev->set_relative(p_pos - hover_prev_pos);
 			ev->set_button_mask(p_button_mask);
 			Input::get_singleton()->parse_input_event(ev);
-            hover_prev_pos = p_pos;
+			hover_prev_pos = p_pos;
 		} break;
 	}
 }

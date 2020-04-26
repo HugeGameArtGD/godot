@@ -67,9 +67,17 @@ private:
 	static const int ANDROID_MOUSE_WHEEL_DOWN = 1 << (BUTTON_WHEEL_DOWN - 1);
 	static const int ANDROID_MOUSE_WHEEL_RIGHT = 1 << (BUTTON_WHEEL_RIGHT - 1);
 	static const int ANDROID_MOUSE_WHEEL_LEFT = 1 << (BUTTON_WHEEL_LEFT - 1);
-	static const int ACTION_BUTTON_PRESS = 11;
-	static const int ACTION_BUTTON_RELEASE = 12;
-	static const int ACTION_MOVE = 2;
+
+	enum ANDROID_MOTION_EVENTS {
+		ACTION_DOWN = 0,
+		ACTION_UP = 1,
+		ACTION_MOVE = 2,
+		ACTION_CANCEL = 3,
+		ACTION_POINTER_DOWN = 5,
+		ACTION_POINTER_UP = 6,
+		ACTION_BUTTON_PRESS = 11,
+		ACTION_BUTTON_RELEASE = 12
+	};
 	int buttons_state;
 
 	bool keep_screen_on;
@@ -166,9 +174,9 @@ public:
 	void process_gravity(const Vector3 &p_gravity);
 	void process_magnetometer(const Vector3 &p_magnetometer);
 	void process_gyroscope(const Vector3 &p_gyroscope);
-	void process_touch(int p_what, int p_pointer, const Vector<TouchPos> &p_points);
+	void process_touch(int p_event, int p_pointer, const Vector<TouchPos> &p_points);
 	void process_hover(int p_type, Point2 p_pos);
-    void process_mouse_event(int p_action, int p_button_mask, Point2 p_pos, float factor);
+	void process_mouse_event(int p_action, int p_button_mask, Point2 p_pos, float factor);
 	void process_double_tap(int p_button_mask, Point2 p_pos);
 	void process_scroll(Point2 p_pos);
 	void process_joy_event(JoypadEvent p_event);
