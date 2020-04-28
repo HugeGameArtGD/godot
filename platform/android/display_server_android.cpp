@@ -36,6 +36,8 @@
 #include "java_godot_wrapper.h"
 #include "os_android.h"
 
+#include <android/input.h>
+
 #if defined(OPENGL_ENABLED)
 #include "drivers/gles2/rasterizer_gles2.h"
 #endif
@@ -491,7 +493,7 @@ void DisplayServerAndroid::process_key_event(int p_keycode, int p_scancode, int 
 
 void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vector<DisplayServerAndroid::TouchPos> &p_points) {
 	switch (p_event) {
-		case ACTION_DOWN: { //gesture begin
+		case AMOTION_EVENT_ACTION_DOWN: { //gesture begin
 			if (touch.size()) {
 				//end all if exist
 				for (int i = 0; i < touch.size(); i++) {
@@ -521,7 +523,7 @@ void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vecto
 			}
 
 		} break;
-		case ACTION_MOVE: { //motion
+		case AMOTION_EVENT_ACTION_MOVE: { //motion
 			ERR_FAIL_COND(touch.size() != p_points.size());
 
 			for (int i = 0; i < touch.size(); i++) {
@@ -548,8 +550,8 @@ void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vecto
 			}
 
 		} break;
-		case ACTION_CANCEL:
-		case ACTION_UP: { //release
+		case AMOTION_EVENT_ACTION_CANCEL:
+		case AMOTION_EVENT_ACTION_UP: { //release
 			if (touch.size()) {
 				//end all if exist
 				for (int i = 0; i < touch.size(); i++) {
@@ -563,7 +565,7 @@ void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vecto
 				touch.clear();
 			}
 		} break;
-		case ACTION_POINTER_DOWN: { // add touch
+		case AMOTION_EVENT_ACTION_POINTER_DOWN: { // add touch
 			for (int i = 0; i < p_points.size(); i++) {
 				if (p_points[i].id == p_pointer) {
 					TouchPos tp = p_points[i];
@@ -581,7 +583,7 @@ void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vecto
 				}
 			}
 		} break;
-		case ACTION_POINTER_UP: { // remove touch
+		case AMOTION_EVENT_ACTION_POINTER_UP: { // remove touch
 			for (int i = 0; i < touch.size(); i++) {
 				if (touch[i].id == p_pointer) {
 					Ref<InputEventScreenTouch> ev;
@@ -602,9 +604,9 @@ void DisplayServerAndroid::process_touch(int p_event, int p_pointer, const Vecto
 void DisplayServerAndroid::process_hover(int p_type, Point2 p_pos) {
 	// https://developer.android.com/reference/android/view/MotionEvent.html#ACTION_HOVER_ENTER
 	switch (p_type) {
-		case 7: // hover move
-		case 9: // hover enter
-		case 10: { // hover exit
+		case AMOTION_EVENT_ACTION_HOVER_MOVE: // hover move
+		case AMOTION_EVENT_ACTION_HOVER_ENTER: // hover enter
+		case AMOTION_EVENT_ACTION_HOVER_EXIT: { // hover exit
 			Ref<InputEventMouseMotion> ev;
 			ev.instance();
 			ev->set_position(p_pos);
@@ -618,13 +620,13 @@ void DisplayServerAndroid::process_hover(int p_type, Point2 p_pos) {
 
 void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, Point2 p_pos, float factor) {
 	switch (p_action) {
-		case ACTION_BUTTON_PRESS:
-		case ACTION_BUTTON_RELEASE: {
+		case AMOTION_EVENT_ACTION_BUTTON_PRESS:
+		case AMOTION_EVENT_ACTION_BUTTON_RELEASE: {
 			Ref<InputEventMouseButton> ev;
 			ev.instance();
 			ev->set_position(p_pos);
 			ev->set_global_position(p_pos);
-			ev->set_pressed(p_action == ACTION_BUTTON_PRESS);
+			ev->set_pressed(p_action == AMOTION_EVENT_ACTION_BUTTON_PRESS);
 			ev->set_factor(factor);
 			int button_mask = buttons_state ^ p_button_mask;
 
@@ -635,7 +637,7 @@ void DisplayServerAndroid::process_mouse_event(int p_action, int p_button_mask, 
 			Input::get_singleton()->parse_input_event(ev);
 		} break;
 
-		case ACTION_MOVE: {
+		case AMOTION_EVENT_ACTION_MOVE: {
 			Ref<InputEventMouseMotion> ev;
 			ev.instance();
 			ev->set_position(p_pos);

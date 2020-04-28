@@ -68,16 +68,6 @@ private:
 	static const int ANDROID_MOUSE_WHEEL_RIGHT = 1 << (BUTTON_WHEEL_RIGHT - 1);
 	static const int ANDROID_MOUSE_WHEEL_LEFT = 1 << (BUTTON_WHEEL_LEFT - 1);
 
-	enum ANDROID_MOTION_EVENTS {
-		ACTION_DOWN = 0,
-		ACTION_UP = 1,
-		ACTION_MOVE = 2,
-		ACTION_CANCEL = 3,
-		ACTION_POINTER_DOWN = 5,
-		ACTION_POINTER_UP = 6,
-		ACTION_BUTTON_PRESS = 11,
-		ACTION_BUTTON_RELEASE = 12
-	};
 	int buttons_state;
 
 	bool keep_screen_on;
