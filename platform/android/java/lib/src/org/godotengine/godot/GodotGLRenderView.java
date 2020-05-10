@@ -29,7 +29,6 @@
 /*************************************************************************/
 
 package org.godotengine.godot;
-import android.view.InputDevice;
 import org.godotengine.godot.input.GodotGestureHandler;
 import org.godotengine.godot.input.GodotInputHandler;
 import org.godotengine.godot.utils.GLUtils;

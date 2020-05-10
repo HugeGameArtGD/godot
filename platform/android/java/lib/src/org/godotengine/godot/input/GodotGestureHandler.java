@@ -32,11 +32,10 @@ package org.godotengine.godot.input;
 
 import org.godotengine.godot.GodotLib;
 import org.godotengine.godot.GodotRenderView;
+import org.godotengine.godot.utils.InputUtils;
 
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import org.godotengine.godot.utils.InputUtils;
 
 /**
  * Handles gesture input related events for the {@link GodotRenderView} view.

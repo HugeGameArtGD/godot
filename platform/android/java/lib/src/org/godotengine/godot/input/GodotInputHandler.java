@@ -35,7 +35,9 @@ import static org.godotengine.godot.utils.GLUtils.DEBUG;
 import org.godotengine.godot.GodotLib;
 import org.godotengine.godot.GodotRenderView;
 import org.godotengine.godot.input.InputManagerCompat.InputDeviceListener;
+import org.godotengine.godot.utils.InputUtils;
 
+import android.os.Build;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.InputDevice.MotionRange;
@@ -46,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.godotengine.godot.utils.InputUtils;
 
 /**
  * Handles input related events for the {@link GodotRenderView} view.
@@ -180,7 +181,6 @@ public class GodotInputHandler implements InputDeviceListener {
 			final float[] arr = new float[event.getPointerCount() * 3];
 
 			for (int i = 0; i < event.getPointerCount(); i++) {
-
 				arr[i * 3 + 0] = event.getPointerId(i);
 				arr[i * 3 + 1] = event.getX(i);
 				arr[i * 3 + 2] = event.getY(i);
