@@ -78,6 +78,8 @@ private:
 	Point2 hover_prev_pos; // needed to calculate the relative position on hover events
 	Point2 scroll_prev_pos; // needed to calculate the relative position on scroll events
 
+	CursorShape cursor_shape = CursorShape::CURSOR_ARROW;
+
 #if defined(VULKAN_ENABLED)
 	VulkanContextAndroid *context_vulkan;
 	RenderingDeviceVulkan *rendering_device_vulkan;
@@ -179,6 +181,9 @@ public:
 	void process_scroll(Point2 p_pos);
 	void process_joy_event(JoypadEvent p_event);
 	void process_key_event(int p_keycode, int p_scancode, int p_unicode_char, bool p_pressed);
+
+	virtual void cursor_set_shape(CursorShape p_shape);
+	virtual CursorShape cursor_get_shape() const;
 
 	void mouse_set_mode(MouseMode p_mode);
 	MouseMode mouse_get_mode() const;

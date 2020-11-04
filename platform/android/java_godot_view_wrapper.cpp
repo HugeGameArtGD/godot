@@ -42,6 +42,7 @@ GodotJavaViewWrapper::GodotJavaViewWrapper(jobject godot_view) {
 	if (android_get_device_api_level() >= __ANDROID_API_O__) {
 		_request_pointer_capture = env->GetMethodID(_cls, "requestPointerCapture", "()V");
 		_release_pointer_capture = env->GetMethodID(_cls, "releasePointerCapture", "()V");
+		_set_pointer_icon = env->GetMethodID(_cls, "setPointerIcon", "(I)V");
 	}
 }
 
@@ -57,6 +58,11 @@ void GodotJavaViewWrapper::release_pointer_capture() {
 		JNIEnv *env = ThreadAndroid::get_env();
 		env->CallVoidMethod(_godot_view, _release_pointer_capture);
 	}
+}
+
+void GodotJavaViewWrapper::set_pointer_icon(int pointer_type) {
+	JNIEnv *env = ThreadAndroid::get_env();
+	env->CallVoidMethod(_godot_view, _set_pointer_icon, pointer_type);
 }
 
 GodotJavaViewWrapper::~GodotJavaViewWrapper() {
