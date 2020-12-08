@@ -37,6 +37,7 @@
 #include <android/log.h>
 #include <jni.h>
 
+#include "core/templates/list.h"
 #include "java_godot_view_wrapper.h"
 #include "string_android.h"
 
@@ -68,6 +69,7 @@ private:
 	jmethodID _get_input_fallback_mapping = 0;
 	jmethodID _on_godot_main_loop_started = 0;
 	jmethodID _get_class_loader = 0;
+	jmethodID _call_intent_with_command_line_args = 0;
 
 public:
 	GodotJavaWrapper(JNIEnv *p_env, jobject p_activity, jobject p_godot_instance);
@@ -98,6 +100,7 @@ public:
 	bool is_activity_resumed();
 	void vibrate(int p_duration_ms);
 	String get_input_fallback_mapping();
+	void call_intent_with_command_line_args(String intent, List<String> args);
 };
 
 #endif /* !JAVA_GODOT_WRAPPER_H */
